@@ -35,9 +35,6 @@ static NODE stack[100];
 static int vIdx = 0;
 static int sIdx = 0;
 
-static int n_lock = 0;
-static int n_unlock = 0;
-
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 
 int find_mutex_index(pthread_mutex_t* m){

@@ -7,14 +7,14 @@
 #include <unistd.h>
 #define TRUE 1
 #define FALSE 0
-void printMutexMatrix(void);
+void printMutexAdjList(void);
 void printThreadHold(pthread_t t);
 void push_ThreadInfo(pthread_t t, pthread_mutex_t *m);
 void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t);
 void push_node(pthread_mutex_t *m);
 void push_edge(pthread_mutex_t* src, pthread_mutex_t* dst);
 void pop_ThreadHold(pthread_t t, pthread_mutex_t *m);
-void pop_MutexMatrix(pthread_mutex_t *m);
+void pop_MutexAdjList(pthread_mutex_t *m);
 
 typedef struct{
 	pthread_mutex_t *mid;
@@ -26,7 +26,7 @@ typedef struct{
 
 
 static THREADLIST thread_info[10];
-static NODE mutex_matrix[100][100];
+static NODE mutex_adjList[100][100];
 static NODE thread_hold[10][100];
 
 static NODE visited[100];
@@ -40,7 +40,7 @@ pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
 int find_mutex_index(pthread_mutex_t* m){
 	int n;
 	for(n = 0; n < 100; n++){
-		if(mutex_matrix[n][0].mid == m){
+		if(mutex_adjList[n][0].mid == m){
 			return n;
 		}
 	}
@@ -82,12 +82,12 @@ int check_cycle(int y, pthread_mutex_t* m){
 		stack[sIdx++].mid = m;
 
 		for(x = 1; x < 100; x++){
-			if(mutex_matrix[y][x].mid != 0){
-				if(!is_visited(mutex_matrix[y][x].mid) &&
-				check_cycle(find_mutex_index(mutex_matrix[y][x].mid), mutex_matrix[y][x].mid)){
+			if(mutex_adjList[y][x].mid != 0){
+				if(!is_visited(mutex_adjList[y][x].mid) &&
+				check_cycle(find_mutex_index(mutex_adjList[y][x].mid), mutex_adjList[y][x].mid)){
 					return TRUE;
 				}
-				else if(is_inStack(mutex_matrix[y][x].mid)){
+				else if(is_inStack(mutex_adjList[y][x].mid)){
 					return TRUE;
 				}
 			}
@@ -110,8 +110,8 @@ void is_cycle(void){
 	sIdx = 0;
 
 	for(y = 0; y < 100; y++){
-		if( mutex_matrix[y][0].mid == 0) continue;
-		if(check_cycle(y,mutex_matrix[y][0].mid)){
+		if( mutex_adjList[y][0].mid == 0) continue;
+		if(check_cycle(y,mutex_adjList[y][0].mid)){
 			printf("Deadlock Detection \n");
 			return;
 		}
@@ -138,15 +138,15 @@ void push_edge(pthread_mutex_t* src, pthread_mutex_t* dst){
 	*/
 	int x, y;
 	for(y = 0; y < 100; y++){
-		if( mutex_matrix[y][0].mid == src){
+		if( mutex_adjList[y][0].mid == src){
 			for(x = 1; x < 100; x++){
-				if(mutex_matrix[y][x].mid == dst){
+				if(mutex_adjList[y][x].mid == dst){
 					return;
 				}
 			}
 			for(x = 1; x < 100; x++){
-				if(mutex_matrix[y][x].mid == 0){
-					mutex_matrix[y][x].mid = dst;
+				if(mutex_adjList[y][x].mid == 0){
+					mutex_adjList[y][x].mid = dst;
 					return;
 				}
 			}
@@ -162,14 +162,14 @@ void push_node(pthread_mutex_t *m){
 	int i;
 	// 이미 있는 경우 return;
 	for(i = 0; i < 100; i++){
-		if (mutex_matrix[i][0].mid == m){
+		if (mutex_adjList[i][0].mid == m){
 			return;
 		}
 	}
-	// mutex_matrix에 새롭게 추가
+	// mutex_adjList에 새롭게 추가
 	for(i = 0; i < 100; i++){
-		if(mutex_matrix[i][0].mid == 0){
-			mutex_matrix[i][0].mid = m;
+		if(mutex_adjList[i][0].mid == 0){
+			mutex_adjList[i][0].mid = m;
 			return;
 		}
 	}
@@ -200,7 +200,7 @@ void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t){
 			break;
 		}
 	}
-	// mutex_matrix에 이 mutex가 없는지 확인하고, 추가.
+	// mutex_adjList에 이 mutex가 없는지 확인하고, 추가.
 	push_node(m);
 }
 void push_ThreadInfo(pthread_t t, pthread_mutex_t *m){
@@ -242,19 +242,19 @@ void printThreadHold(pthread_t t){
 	}
 }
 
-void printMutexMatrix(void){
+void printMutexAdjList(void){
 	int x, y;
 	//for( y = 0; y < 100; y++){
 	for( y = 0; y < 5; y++){
-		printf("%d:[%u] ",y,mutex_matrix[y][0].mid);
+		printf("%d:[%u] ",y,mutex_adjList[y][0].mid);
 		//for( x = 1; x < 100; x++){
 		for( x = 1; x < 5; x++){
-			printf("'%u' ",mutex_matrix[y][x].mid);
+			printf("'%u' ",mutex_adjList[y][x].mid);
 		}
 		printf("\n");
 	}
 }
-void pop_MutexMatrix(pthread_mutex_t *m){
+void pop_MutexAdjList(pthread_mutex_t *m){
 	/*
 
 	for y = 0 to 100
@@ -266,15 +266,15 @@ void pop_MutexMatrix(pthread_mutex_t *m){
 	*/
 	int x, y;
 	for(y = 0; y < 100; y++){
-		if(mutex_matrix[y][0].mid == m){
+		if(mutex_adjList[y][0].mid == m){
 			for(x = 0; x < 100; x++){
-					mutex_matrix[y][x].mid = 0;
+					mutex_adjList[y][x].mid = 0;
 			}
 		}
 		else{
 			for(x = 1; x < 100; x++){
-				if(mutex_matrix[y][x].mid == m){
-					mutex_matrix[y][x].mid = 0;
+				if(mutex_adjList[y][x].mid == m){
+					mutex_adjList[y][x].mid = 0;
 					break;
 				}
 			}
@@ -307,7 +307,6 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 	int (*orig_lock)(pthread_mutex_t *mutex);
 	int (*orig_unlock)(pthread_mutex_t *mutex);
 	char *error;
-	int i;
 	orig_lock = dlsym(RTLD_NEXT, "pthread_mutex_lock");
 	if((error = dlerror()) != 0x0){
 		exit(1);
@@ -341,7 +340,7 @@ pthread_mutex_unlock (pthread_mutex_t *mutex)
 	}
 	orig_lock(&mut);
 		pthread_t tid = pthread_self();
-	  pop_MutexMatrix(mutex);
+	  pop_MutexAdjList(mutex);
 	  pop_ThreadHold(tid, mutex);
 	orig_unlock(&mut);
 	return orig_unlock(mutex);

@@ -47,29 +47,24 @@ int find_mutex_index(pthread_mutex_t* m){
 			return n;
 		}
 	}
-	//printf("cannot find mutex index\n");
 }
 
 int is_visited(pthread_mutex_t* m){
 	int i;
 	for(i = 0; i < vIdx; i++){
 		if(visited[i].mid == m){
-			//printf("true-isvisited\n");
 			return TRUE;
 		}
 	}
-	//printf("mutex : %u | false-isvisited\n",m);
 	return FALSE;
 }
 int is_inStack(pthread_mutex_t* m){
 	int i;
 	for(i = 0; i < sIdx; i++){
 		if(stack[i].mid == m){
-			//printf("true-isInstack\n");
 			return TRUE;
 		}
 	}
-	//printf("mutex : %u | false-isInstack\n",m);
 	return FALSE;
 }
 void pop_stack(pthread_mutex_t* m){
@@ -93,11 +88,9 @@ int check_cycle(int y, pthread_mutex_t* m){
 			if(mutex_matrix[y][x].mid != 0){
 				if(!is_visited(mutex_matrix[y][x].mid) &&
 				check_cycle(find_mutex_index(mutex_matrix[y][x].mid), mutex_matrix[y][x].mid)){
-				//	printf("DeadLock Detection 1 \n");
 					return TRUE;
 				}
 				else if(is_inStack(mutex_matrix[y][x].mid)){
-				//	printf("DeadLock Detection 2 \n");
 					return TRUE;
 				}
 			}
@@ -122,7 +115,7 @@ void is_cycle(void){
 	for(y = 0; y < 100; y++){
 		if( mutex_matrix[y][0].mid == 0) continue;
 		if(check_cycle(y,mutex_matrix[y][0].mid)){
-			printf("Deadlock Detection 3\n");
+			printf("Deadlock Detection \n");
 			return;
 		}
 	}
@@ -193,12 +186,7 @@ void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t){
 	int i;
 	for(i = 0; i < 100; i++){
 		if(thread_hold[idx][i].mid == m){ //self deadlock
-
-			printf("tid : %u | mid : %u | m : %u\n",t,thread_hold[idx][i].mid ,m);
-			printThreadHold(t);
-			printMutexMatrix();
 			printf("DEADLOCK OCCURS\n");
-
 			return;
 		}
 	}
@@ -310,10 +298,10 @@ void pop_ThreadHold(pthread_t t, pthread_mutex_t *m){
 					return;
 				}
 			}
-		//	printf("error : not found mid in thread_hold\n");
+			printf("error : not found mid in thread_hold\n");
 		}
 	}
-//	printf("error : not found tid in thread_info\n");
+	printf("error : not found tid in thread_info\n");
 }
 
 int
@@ -333,16 +321,8 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 	}
 	orig_lock(&mut);
 		pthread_t tid = pthread_self();
-	//	printf("--------------tid: <%u>, mutex : '%u'--------\n",tid, mutex);
 		push_ThreadInfo(tid, mutex);
 		is_cycle();
-		//print_visited();
-	//	printThreadHold(tid);
-//		printMutexMatrix();
-		//printf("lock!!!! tid:%u | mutex : %u\n",tid,mutex);
-//		printThreadHold(tid);
-		//printMutexMatrix();
-//		printf("----------------------------------------\n");
 	orig_unlock(&mut);
 
 	return orig_lock(mutex) ;
@@ -363,18 +343,9 @@ pthread_mutex_unlock (pthread_mutex_t *mutex)
 		exit(1);
 	}
 	orig_lock(&mut);
-	pthread_t tid = pthread_self();	
-//	printf("unlock---------tid: <%u>, mutex : '%u'--------\n",tid, mutex);
+		pthread_t tid = pthread_self();
 	  pop_MutexMatrix(mutex);
 	  pop_ThreadHold(tid, mutex);
-	
-	//	printf("unlock tid:%u | mutex : %u\n",tid,mutex);
-	//	printMutexMatrix();
-	//	printThreadHold(tid);
-	//	printf("--------------------------\n");
-//	printf("unlock\n",tid, mutex);
-//  printThreadHold(tid);
-	//printMutexMatrix();
 	orig_unlock(&mut);
 	return orig_unlock(mutex);
 }

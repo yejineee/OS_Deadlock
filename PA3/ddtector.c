@@ -7,8 +7,6 @@
 #include <unistd.h>
 #define TRUE 1
 #define FALSE 0
-//void printMutexAdjList(void);
-//void printThreadHold(pthread_t t);
 void push_ThreadInfo(pthread_t t, pthread_mutex_t *m);
 void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t);
 void push_node(pthread_mutex_t *m);
@@ -74,16 +72,6 @@ void pop_stack(pthread_mutex_t* m){
 	}
 	sIdx-- ;
 }
-/*
-void print_stack(void){
-	int i;
-	printf("sIdx : %d, stack : ",sIdx);
-	for(i = 0; i < sIdx; i++){
-		printf("(%d)%u > ", i,stack[i].mid);
-	}
-	printf("\n");
-}
-*/
 int check_cycle(int y, pthread_mutex_t* m){
 	int x;
 
@@ -132,12 +120,6 @@ void is_cycle(void){
 
 
 void push_edge(pthread_mutex_t* src, pthread_mutex_t* dst){
-	/*
-			mutex matrix[i][0] == src 인 곳에
-			 	dst가 있는지 확인.
-					있다면 -> return;
-					없다면 -> 빈 곳에 추가하고 return;
-	*/
 	int x, y;
 	for(y = 0; y < 100; y++){
 		if( mutex_adjList[y][0].mid == src){
@@ -156,19 +138,12 @@ void push_edge(pthread_mutex_t* src, pthread_mutex_t* dst){
 	}
 }
 void push_node(pthread_mutex_t *m){
-	/*
-	mutex matrix[i][0] search하면서 m과 같은 것이 있는지 확인,
-	있다면 return;
-	없다면 matrix[i][0] = 0인 곳에 추가.
-	*/
 	int i;
-	// 이미 있는 경우 return;
 	for(i = 0; i < 100; i++){
 		if (mutex_adjList[i][0].mid == m){
 			return;
 		}
 	}
-	// mutex_adjList에 새롭게 추가
 	for(i = 0; i < 100; i++){
 		if(mutex_adjList[i][0].mid == 0){
 			mutex_adjList[i][0].mid = m;
@@ -179,9 +154,6 @@ void push_node(pthread_mutex_t *m){
 
 
 void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t){
-	/* 이미 thread_hold에 m이 있다면 --> deadlock!
-		thread_hold에 없다면, mid 가 빈곳에 넣어줌
-	*/
 	int i;
 	for(i = 0; i < 100; i++){
 		if(thread_hold[idx][i].mid == m){ //self deadlock
@@ -189,7 +161,6 @@ void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t){
 			return;
 		}
 	}
-//	자신의 thread_hold의 모든 node에 대해서 edge 생성
 	for(i = 0; i < 100; i++){
 		if (thread_hold[idx][i].mid != 0){
 			push_edge(thread_hold[idx][i].mid, m);
@@ -202,73 +173,26 @@ void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t){
 			break;
 		}
 	}
-	// mutex_adjList에 이 mutex가 없는지 확인하고, 추가.
 	push_node(m);
 }
 void push_ThreadInfo(pthread_t t, pthread_mutex_t *m){
-	/* thread_info에 tid가 매칭되는 것을 찾아라.
-	if 있다면, 해당 thread_hold로 가서, thread_hold에 m 저장.
-	else 없다면, thread_info에 tid 저장하고, thread_hold에 m 저장.
-	*/
 	int i;
 	pthread_t target = t;
 	for(i = 0; i < 10; i++){
 		if(thread_info[i].tid == target){
-			//thread_hold로 가서 thread_hold에 m 저장
 			push_ThreadHold(i, m, t);
 			return;
 		}
 	}
 	for(i = 0; i < 10; i++){
-		if(thread_info[i].tid == 0){ //빈 thread
-			//thread_hold로 가서 thread_hold에  m 저장
+		if(thread_info[i].tid == 0){
 			thread_info[i].tid = target;
 			push_ThreadHold(i, m, t);
 			return;
 		}
 	}
 }
-/*
-void printThreadHold(pthread_t t){
-	int idx, j;
-	for( idx = 0; idx < 10; idx++){
-		if(thread_info[idx].tid == t){
-			printf("<tid : %u >",thread_info[idx].tid);
-			for(j = 0; j < 100; j++){
-				if(thread_hold[idx][j].mid != 0){
-					printf(" %u ->", thread_hold[idx][j].mid);
-				}
-			}
-			printf(" NIL\n");
-			return;
-		}
-	}
-}
-*/
-/*
-void printMutexAdjList(void){
-	int x, y;
-	//for( y = 0; y < 100; y++){
-	for( y = 0; y < 5; y++){
-		printf("%d:[%u] ",y,mutex_adjList[y][0].mid);
-		//for( x = 1; x < 100; x++){
-		for( x = 1; x < 5; x++){
-			printf("'%u' ",mutex_adjList[y][x].mid);
-		}
-		printf("\n");
-	}
-}
-*/
 void pop_MutexAdjList(pthread_mutex_t *m){
-	/*
-
-	for y = 0 to 100
-		if mm[y][0] == m;
-			for x = 0 to x 100 delete all
-		else
-			for x = 1 to 100
-			 if mm[y][x] == m 이면 delete.
-	*/
 	int x, y;
 	for(y = 0; y < 100; y++){
 		if(mutex_adjList[y][0].mid == m){
@@ -288,9 +212,6 @@ void pop_MutexAdjList(pthread_mutex_t *m){
 }
 
 void pop_ThreadHold(pthread_t t, pthread_mutex_t *m){
-	/*
-		thread_hold에서 해당 mutex 제거
-	*/
 	int idx, x;
 	for(idx = 0; idx < 10; idx++){
 		if(thread_info[idx].tid == t){
@@ -300,10 +221,8 @@ void pop_ThreadHold(pthread_t t, pthread_mutex_t *m){
 					return;
 				}
 			}
-			printf("error : not found mid in thread_hold\n");
 		}
 	}
-	printf("error : not found tid in thread_info\n");
 }
 
 int

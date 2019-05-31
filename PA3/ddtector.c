@@ -7,8 +7,8 @@
 #include <unistd.h>
 #define TRUE 1
 #define FALSE 0
-void printMutexAdjList(void);
-void printThreadHold(pthread_t t);
+//void printMutexAdjList(void);
+//void printThreadHold(pthread_t t);
 void push_ThreadInfo(pthread_t t, pthread_mutex_t *m);
 void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t);
 void push_node(pthread_mutex_t *m);
@@ -74,6 +74,16 @@ void pop_stack(pthread_mutex_t* m){
 	}
 	sIdx-- ;
 }
+/*
+void print_stack(void){
+	int i;
+	printf("sIdx : %d, stack : ",sIdx);
+	for(i = 0; i < sIdx; i++){
+		printf("(%d)%u > ", i,stack[i].mid);
+	}
+	printf("\n");
+}
+*/
 int check_cycle(int y, pthread_mutex_t* m){
 	int x;
 
@@ -112,21 +122,13 @@ void is_cycle(void){
 	for(y = 0; y < 100; y++){
 		if( mutex_adjList[y][0].mid == 0) continue;
 		if(check_cycle(y,mutex_adjList[y][0].mid)){
-			printf("Deadlock Detection \n");
+			printf("<!> Deadlock Detected \n");
 			return;
 		}
 	}
 	return;
 }
 
-void print_visited(){
-	int i;
-	printf("vIdx : %d, visited : ",vIdx);
-	for(i = 0; i < 100; i++){
-		printf("(%d)%u > ", i,visited[i].mid);
-	}
-	printf("\n");
-}
 
 
 void push_edge(pthread_mutex_t* src, pthread_mutex_t* dst){
@@ -183,7 +185,7 @@ void push_ThreadHold(int idx, pthread_mutex_t *m, pthread_t t){
 	int i;
 	for(i = 0; i < 100; i++){
 		if(thread_hold[idx][i].mid == m){ //self deadlock
-			printf("DEADLOCK OCCURS\n");
+			printf("<!> DEADLOCK DETECTED - self deadlock\n");
 			return;
 		}
 	}
@@ -226,6 +228,7 @@ void push_ThreadInfo(pthread_t t, pthread_mutex_t *m){
 		}
 	}
 }
+/*
 void printThreadHold(pthread_t t){
 	int idx, j;
 	for( idx = 0; idx < 10; idx++){
@@ -241,7 +244,8 @@ void printThreadHold(pthread_t t){
 		}
 	}
 }
-
+*/
+/*
 void printMutexAdjList(void){
 	int x, y;
 	//for( y = 0; y < 100; y++){
@@ -254,6 +258,7 @@ void printMutexAdjList(void){
 		printf("\n");
 	}
 }
+*/
 void pop_MutexAdjList(pthread_mutex_t *m){
 	/*
 
